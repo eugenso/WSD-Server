@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dcaThesaurusConfiguration>
+	<tables>
+		<tableSimilarTerms></tableSimilarTerms>
+        <tableSimilarContexts>Ctx2CtxSim</tableSimilarContexts>
+        <tableTermContextsScore>Word2CtxSim</tableTermContextsScore>
+        <tableContextsCount></tableContextsCount>
+        <tableTermCount></tableTermCount>
+        <senses name="CW" isDefault="true">
+	        <tableSenses></tableSenses>
+	        <tableIsas></tableIsas>
+	        <tableSenseCUIs></tableSenseCUIs>
+        </senses>
+	</tables>
+	<dcaConfigFile>resources/dca_cluster_config.conf</dcaConfigFile>
+</dcaThesaurusConfiguration>
