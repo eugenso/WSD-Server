@@ -14,7 +14,7 @@
         </senses>
     </tables>
 
-    <dbUrl>jdbc:mysql://HOST:3306/Contextualization</dbUrl>
+    <dbUrl>jdbc:mysql://HOST:3306/Contextualization?autoReconnect=true</dbUrl>
         <dbUser>dummy</dbUser>
     <dbPassword>dummy</dbPassword>
     <jdbcString>com.mysql.jdbc.Driver</jdbcString>
