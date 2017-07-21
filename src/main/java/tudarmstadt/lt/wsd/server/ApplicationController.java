@@ -76,7 +76,7 @@ public class ApplicationController {
         out.put("word", word);
         out.put("modelName", "depslm");
 
-        Set<String> features = null;
+        Set<String> features;
         for (Annotation tw : JCasUtil.select(cas, TargetWord.class)) {
             // get context featues
             features = new HashSet<>();
@@ -116,7 +116,7 @@ public class ApplicationController {
                 //  hypernyms
                 JSONArray hypernyms = new JSONArray();
                 for (int i=0; i< si.getHypernyms().size(); i++) {
-                    hypernyms.add(si.getHypernyms(i));
+                    hypernyms.add(si.getHypernyms(i).substring(0, si.getHypernyms(i).lastIndexOf(":")));
                 }
                 sCluster.put("hypernyms", hypernyms);
 
@@ -286,22 +286,12 @@ public class ApplicationController {
      *
      * @param args execution arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InstantiationException {
 
         analyzer = new Analyzer();
         try {
             extractor = JobimExtractorConfiguration.getExtractorFromXmlFile("resources/extractor_parsed_np.xml");
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (JAXBException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
