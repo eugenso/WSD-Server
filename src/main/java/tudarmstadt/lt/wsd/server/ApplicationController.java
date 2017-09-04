@@ -3,11 +3,13 @@ package tudarmstadt.lt.wsd.server;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.util.JSONUtils;
-import org.apache.pig.impl.util.Pair;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.jobimtext.api.struct.*;
+import org.jobimtext.api.struct.DCAThesaurusDatastructure;
+import org.jobimtext.api.struct.DatabaseThesaurusDatastructure;
+import org.jobimtext.api.struct.IThesaurusDatastructure;
+import org.jobimtext.api.struct.Order1;
 import org.jobimtext.holing.extractor.JobimAnnotationExtractor;
 import org.jobimtext.holing.extractor.JobimExtractorConfiguration;
 import org.jobimtext.holing.type.JoBim;
@@ -124,12 +126,10 @@ public class ApplicationController {
                     int sepPosition = si.getMatchedFeatures(i).lastIndexOf(":");
 
                     mf.put("label", si.getMatchedFeatures(i).substring(0, sepPosition));
-                    mf.put("weight", si.getMatchedFeatures(i).substring(sepPosition+1));
+                    mf.put("weight", Double.parseDouble(si.getMatchedFeatures(i).substring(sepPosition+1)));
                     mutual.add(mf);
                 }
-                sCluster.put("mutualFeatures", mutual);
-
-                out.put("contextFeatures", features);
+                prediction.put("mutualFeatures", mutual);
 
                 prediction.put("confidenceProb", si.getContextScore());
 
