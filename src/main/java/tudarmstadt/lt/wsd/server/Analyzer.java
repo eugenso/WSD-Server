@@ -109,14 +109,14 @@ public class Analyzer {
      * Processes a new text by the NLP pipeline. Resets the CAS for fast processing.
      * @param input input text
      */
-    public void processText(String input) {
+    public synchronized void processText(String input) {
         preprocess(input);
 
         ArrayList<String> words = new ArrayList<>();
         for (Annotation a: JCasUtil.select(cas, POS.class)) {
             POS p = (POS) a;
             if (p.getPosValue().startsWith("N")) {
-                words.add(a.getCoveredText());
+                words.add(a.getCoveredText().toLowerCase());
             }
         }
 
@@ -139,7 +139,7 @@ public class Analyzer {
     public void processText(String input, String targetWord) {
         preprocess(input);
         ArrayList<String> words = new ArrayList<>();
-        words.add(targetWord);
+        words.add(targetWord.toLowerCase());
         try {
             targetSetter = AnalysisEngineFactory.createEngine(TargetAnnotator.class,
                     TargetAnnotator.PARAM_SENTENCE_ANNOTATION, "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
@@ -157,7 +157,7 @@ public class Analyzer {
     public void processText(String input, String targetWord, String model) {
         preprocess(input);
         ArrayList<String> words = new ArrayList<>();
-        words.add(targetWord);
+        words.add(targetWord.toLowerCase());
         try {
             targetSetter = AnalysisEngineFactory.createEngine(TargetAnnotator.class,
                     TargetAnnotator.PARAM_SENTENCE_ANNOTATION, "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
@@ -231,8 +231,5 @@ public class Analyzer {
     public List<String> getTokenStrings() {
         return getTokenStrings(this.cas);
     }
-
-    public void setTargetWord(String targetWord) {
-        //targetSetter.set
-    }
+    
 }

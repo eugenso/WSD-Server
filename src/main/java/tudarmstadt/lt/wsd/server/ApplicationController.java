@@ -45,7 +45,7 @@ public class ApplicationController {
 
     @CrossOrigin(origins = "*", allowedHeaders = "*", methods = RequestMethod.POST)
     @RequestMapping(value = "/predictWordSense", method = RequestMethod.POST)
-    String predictWordSense(@Valid @RequestBody String jsonBody) {
+    synchronized String predictWordSense(@Valid @RequestBody String jsonBody) {
         RequestData req = new RequestData(jsonBody);
         String context = req.getContext().replaceAll("\n", " ").replaceAll("\r", " ");
         String word = req.getWord();
@@ -63,8 +63,6 @@ public class ApplicationController {
 
 
         JSONObject out = getJSONResponse(cas, word);
-
-        //JSONObject out = getJSONResponse(req, context, target, targetNP);
 
         return JSONUtils.valueToString(out, 4, 1);
     }
@@ -92,9 +90,8 @@ public class ApplicationController {
 
             // predictions
             JSONArray predictions = new JSONArray();
-            for (Annotation a : JCasUtil.selectCovered(cas, SenseInformation.class, tw)) {
-                SenseInformation si = (SenseInformation) a;
-
+            ArrayList<SenseInformation> orderedPredictions = getOrderedPredictions(cas, tw);
+            for (SenseInformation si : orderedPredictions) {
 
                 // prediction
                 JSONObject prediction = new JSONObject();
@@ -179,91 +176,21 @@ public class ApplicationController {
         return out;
     }
 
-/*    private JSONObject getJSONResponse(RequestData req, String context) {
-        JSONObject out = new JSONObject();
-        out.put("context", context);
-        out.put("word", req.getWord());
-        String target = req.getWord().concat("#NN");
-        String targetNP = req.getWord().concat("#NP");
-
-        // context features
-        List<Pair<String, List<String>>> holing = dtCoarse.getSentenceHoling(context);
-        List<String> features = null;
-        for (Pair<String, List<String>> h : holing) {
-            if (h.first.compareTo(target) == 0 || h.first.compareTo(targetNP) == 0) {
-                features = h.second;
-            }
+    private ArrayList<SenseInformation> getOrderedPredictions(JCas cas, Annotation tw) {
+        ArrayList<SenseInformation> orderedPredictions = new ArrayList<>();
+        List<SenseInformation> predAnnotations = JCasUtil.selectCovered(cas, SenseInformation.class, tw);
+        int max = predAnnotations.size();
+        int c = 0;
+        while (c++ < max) {
+            orderedPredictions.add(new SenseInformation(cas));
         }
-        out.put("contextFeatures", features);
-
-        // fill sense columns with predictions
-        JSONArray predictions = new JSONArray();
-        List<Sense> senses = dtCoarse.getIsas(target);
-
-        for (Sense s : senses) {
-            JSONObject sCluster = new JSONObject();
-            sCluster.put("id", target + "#" + s.getCui());
-            sCluster.put("lemma", req.getWord());
-
-            // hypernyms
-            JSONArray hypernyms = new JSONArray();
-            for (String h : s.getIsas()) {
-                String[] entry = h.split(":");
-                JSONArray hEntry = new JSONArray();
-                hEntry.add(entry[0]);
-                hEntry.add(entry[1]);
-                hypernyms.add(hEntry);
-            }
-            sCluster.put("weighted_hypernyms", hypernyms);
-
-            // related words (adds 10 examples)
-            JSONArray related = new JSONArray();
-            related.addAll(s.getSenses());
-            sCluster.put("words", related);
-
-            // context features for a sense
-            int numClusterFeatures = 0;
-            Set<Order1> contextsSet = new HashSet<>();
-            for (Object rel : related) {
-                List<Order1> contexts = dtCoarse.getTermContextsScores(rel.toString(), 200.00);
-                numClusterFeatures += contexts.size();
-                if (contexts.size() < 10) {
-                    contextsSet.addAll(contexts);
-                } else {
-                    contextsSet.addAll(contexts.subList(0, 10));
-                }
-            }
-
-            HashMap<String, Double> contexts = new HashMap<>();
-            for (Order1 f : contextsSet) {
-                contexts.put(f.key, f.score);
-            }
-
-            // sort contexts descending by value
-            LinkedHashMap<String, Double> sortedContexts =
-                    contexts.entrySet().stream().
-                            sorted(Entry.comparingByValue(Comparator.reverseOrder())).
-                            collect(Collectors.toMap(Entry::getKey, Entry::getValue,
-                                    (e1, e2) -> e1, LinkedHashMap::new));
-
-            JSONObject pred = new JSONObject();
-            pred.put("senseCluster", sCluster);
-            pred.put("simScore", 0.00);
-            // XXXX
-            pred.put("rank", 1);
-            // LM Score
-            pred.put("confidenceProb", 1.00);
-            // XXXX
-            pred.put("mutualFeatures", null);
-            pred.put("contextFeatures", getJSONArray(sortedContexts, -1));
-            pred.put("top20ClusterFeatures", getJSONArray(sortedContexts, 20));
-            pred.put("numClusterFeatures", numClusterFeatures);
-
-            predictions.add(pred);
+        for (Annotation a : predAnnotations) {
+            SenseInformation senseInformation = (SenseInformation) a;
+            orderedPredictions.set(senseInformation.getRank()-1, senseInformation);
         }
-        out.put("predictions", predictions);
-        return out;
-    }*/
+        return orderedPredictions;
+    }
+
 
     private JSONArray getJSONArray(LinkedHashMap<String, Double> sortedContexts, int limit) {
         JSONArray ret = new JSONArray();
@@ -304,7 +231,6 @@ public class ApplicationController {
 
         dtFine = new DatabaseThesaurusDatastructure("resources/conf_mysql_stanford_n50.xml");
         dtFine.connect();
-
 
 
         dt_dca = new DCAThesaurusDatastructure("resources/dca_config.xml");
