@@ -78,7 +78,7 @@ public class ApplicationController {
 
         Set<String> features;
         for (Annotation tw : JCasUtil.select(cas, TargetWord.class)) {
-            // get context featues
+            // get context features
             features = new HashSet<>();
             String lemma = word;
             for (Annotation jb : JCasUtil.selectCovered(JoBim.class, tw)) {
@@ -107,10 +107,12 @@ public class ApplicationController {
 
                 // cluster terms
                 JSONArray words = new JSONArray();
+                JSONArray wordsBare = new JSONArray();
                 for (int i=0; i< si.getClusterElements().size(); i++) {
+                    wordsBare.add(removePOS(si.getClusterElements(i)));
                     words.add(si.getClusterElements(i));
                 }
-                sCluster.put("words", words);
+                sCluster.put("words", wordsBare);
 
                 //  hypernyms
                 JSONArray hypernyms = new JSONArray();
@@ -124,6 +126,9 @@ public class ApplicationController {
                 for (int i=0; i< si.getMatchedFeatures().size(); i++) {
                     JSONObject mf = new JSONObject();
                     int sepPosition = si.getMatchedFeatures(i).lastIndexOf(":");
+                    if (sepPosition == -1) {
+                        continue;
+                    }
 
                     mf.put("label", si.getMatchedFeatures(i).substring(0, sepPosition));
                     mf.put("weight", Double.parseDouble(si.getMatchedFeatures(i).substring(sepPosition+1)));
@@ -201,11 +206,29 @@ public class ApplicationController {
                 return ret;
             }
             JSONObject e = new JSONObject();
-            e.put("label", key);
+            e.put("label", removePOSDep(key));
             e.put("weight", sortedContexts.get(key));
             ret.add(e);
         }
         return ret;
+    }
+
+    private String removePOSDep(String dep) {
+        String[] split = dep.split("#");
+        if (split.length >2) {
+
+            return split[0] + "#" + split[2];
+        }
+        return dep;
+    }
+
+    private String removePOS(String term) {
+        String[] split = term.split("#");
+        if (split.length >1) {
+
+            return split[0];
+        }
+        return term;
     }
 
     /**
